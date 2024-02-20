@@ -36,8 +36,8 @@ change_all()
     read -s -p "Please enter password to be added to new user: " PASS < /dev/tty
 	echo "setting passwords"
 	while IFS= read -r user; do
-		passwd -q -x 85 $user > /dev/null; # password aging controls because why not
-		passwd -q -n 15 $user > /dev/null;
+		passwd -x 85 $user > /dev/null; # password aging controls because why not
+		passwd -n 15 $user > /dev/null;
 		echo $user:$PASS | chpasswd; 
 		chage --maxdays 15 --mindays 6 --warndays 7 --inactive 5 $user;
 	done < users.txt
@@ -88,8 +88,8 @@ change_passwords(){
     while IFS= read -r user; do
         if [ -n "$user" ]; then
             echo "Changing password for user: $user"
-            passwd -q -x 85 $user > /dev/null;
-		    passwd -q -n 15 $user > /dev/null;
+            passwd -x 85 $user > /dev/null;
+		    passwd -n 15 $user > /dev/null;
 		    echo $user:$PASS | chpasswd;
             chage --maxdays 15 --mindays 6 --warndays 7 --inactive 5 $user;
         fi
