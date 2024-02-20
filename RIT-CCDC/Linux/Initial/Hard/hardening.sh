@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # by: Hal Williams (hfw8271) and Justin Huang (jznn)
-# Prerequisites: run as root, and users.txt file exists in same dir, can be created using getUsers.sh in setup folder
+# Prerequisites: run as root
 
 # verify that script is being run with root privileges
 if  [ "$EUID" -ne 0 ]; then 
@@ -20,11 +20,6 @@ fi
 
 exec > Hardening.txt
 exec 2> Hardening_Has_Failed.txt
-
-if [ ! -f "./users.txt" ]; then
-    echo "Necessary text files for users is not present. Shutting down script."
-    exit 1
-fi
 
 # Sed sshd_config
 sed_ssh() {
@@ -138,8 +133,12 @@ kernel(){
 }
 
 aliases(){
-    echo "---------- Resetting user bashrc files and profile file ----------" 
-	for user in $(cat users.txt); do
+    echo "---------- Resetting user bashrc files and profile file ----------"
+    
+    user_list=$(grep -E "/bin/(bash|sh|zsh|fish)" /etc/passwd | cut -d':' -f1); # shells to check for
+	
+    for user in $user_list; do
+            cp /home/$user/.bashrc /home/$user/.bashrc.backup
         	cat configs/bashrc > /home/$user/.bashrc;
 	done;
 	cat configs/bashrc > /root/.bashrc

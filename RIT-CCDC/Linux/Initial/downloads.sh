@@ -421,7 +421,7 @@ sources_list_reset() {
 
 bash_rep() {
     # Install our own custom bashrc (bash config file) in case red team installed their own malicious one...
-
+    # This is also done in hardening for all users
     echo "Replacing bashrc for new users and root..."
     mv /etc/skel/.bashrc /etc/skel/.bashrc.backup
     mv /root/.bashrc /root/.bashrc.backup
