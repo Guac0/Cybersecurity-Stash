@@ -1,1 +1,3 @@
 # Cybersecurity-Stash
+
+A collection of various cybersecurity resources that I've used. Most are sourced from my own work and/or teams I've worked with and are usually publicly available due to competition rules. This repo is so that I can work on them when they're edit locked during their competition season (for usage in other competitions/next season, NOT during the current season when they're intended to be locked).
