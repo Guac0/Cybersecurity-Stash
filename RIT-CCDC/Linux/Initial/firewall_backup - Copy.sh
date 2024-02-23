@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# # dawg what is the snat and dnat states, im not gonna worry about that
-# # use mangle table because why not
+## May Have to mess around with firewalld ## 
+    # sudo systemctl stop firewalld
+    # sudo sysytemctl disable firewalld
 
-# # If this Script is not Working check .bashrc or aliases
+# If this Script is not Working check .bashrc or aliases
 
 ###########################
 ## Must run as superuser ##
@@ -14,44 +15,33 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-# # Import inventory script for service variables, redirect output to null
+# Import inventory script for service variables, redirect output to null
 # source inventory.sh > /dev/null 2>&1
-
-# # Disable UFW as we're handing all firewall stuff in iptables and it's confusing if we manage both
-ufw disable
-
-# # May Have to mess around with firewalld
-# systemctl stop firewalld
-# systemctl disable firewalld
 
 ################
 ## Main Rules ##
 ################
 
-
 # Flush Tables
-# NAT and RAW tables too? sure, why not
+# Might also need to drop the NAT and RAW tables...
 echo "> Flushing Tables"
 iptables -t mangle -F
 iptables -t mangle -X
-iptables -t raw -F
-iptables -t raw -X
-iptables -t nat -F
-iptables -t nat -X
 iptables -F
 iptables -X
 ip6tables -t mangle -F
 ip6tables -t mangle -X
-ip6tables -t raw -F
-ip6tables -t raw -X
-ip6tables -t nat -F
-ip6tables -t nat -X
 ip6tables -F
 ip6tables -X
 
-# IPv6 is cringe, block it
+# IPv6 is cringe
 ip6tables -t mangle -P INPUT DROP
 ip6tables -t mangle -P OUTPUT DROP
+
+# Accept by default in case of flush
+echo "> Applying Default Accept"
+iptables -t mangle -P INPUT ACCEPT
+iptables -t mangle -P OUTPUT ACCEPT
 
 # Allow ICMP 
 echo "> Allow ICMP"
@@ -69,9 +59,8 @@ iptables -t mangle -A INPUT -p tcp --dport ssh -m state --state NEW,ESTABLISHED 
 iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j ACCEPT
 
 ## Allow Scored Service outbound (CCSClient)
-## Change `scoring_ip` to the ip of the scoring server and '80,443' to ips of the scored service!
-#iptables -t mangle -A OUTPUT -p tcp -d scoring_ip --sport 80,443 -m state --state NEW,ESTABLISHED -j ACCEPT
-#iptables -t mangle -A INPUT -p tcp -s scoring_ip --dport 80,443 -m state --state ESTABLISHED -j ACCEPT
+#iptables -t mangle -A OUTPUT -p tcp -d scoring_ip --dport 80,443 -m state --state NEW,ESTABLISHED -j ACCEPT
+#iptables -t mangle -A INPUT -p tcp -d scoring_ip --dport 80,443 -m state --state ESTABLISHED -j ACCEPT
 
 
 
@@ -99,7 +88,7 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 # # Allow DNS Outgoing (UDP)
 # echo "> Allow Outbound DNS (UDP)"
 # iptables -t mangle -A OUTPUT -p udp --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT -p udp --sport 53 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT  -p udp --sport 53 -m state --state ESTABLISHED -j ACCEPT
 
 # # Allow DNS Incoming (UDP)
 # echo "> Allow Inbound DNS (UDP)"
@@ -118,8 +107,8 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 
 # # Allow MariaDB/MySQL Incoming
 # echo "> Allow Inbound MariaDB/MySQL"
-# iptables -t mangle -A INPUT -p tcp --dport 3306 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A OUTPUT -p tcp --sport 3306 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --dport 3306 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 3306 -m state --state ESTABLISHED -j ACCEPT
 
 # # Allow Postgresql Outgoing
 # echo "> Allow Outbound Postgresql "
@@ -128,8 +117,8 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 
 # # Allow Postgresql Incoming
 # echo "> Allow Inbound Postgresql"
-# iptables -t mangle -A INPUT -p tcp --dport 5432 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A OUTPUT -p tcp --sport 5432 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --dport 5432 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 5432 -m state --state ESTABLISHED -j ACCEPT
 
 # # Allow Wazuh Outgoing
 # echo "> Allow Outbound Wazuh "
@@ -140,10 +129,10 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 
 # # Allow Wazuh Incoming
 # echo "> Allow Inbound Wazuh"
-# iptables -t mangle -A INPUT -p tcp --dport 443,514,1514,1515,1516,9200,9300:9400,55000 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A OUTPUT -p tcp --sport 443,514,1514,1515,1516,9200,9300:9400,55000 -m state --state ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT -p udp --dport 514,1514 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A OUTPUT -p udp --sport 514,1514 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --dport 443,514,1514,1515,1516,9200,9300:9400,55000 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 443,514,1514,1515,1516,9200,9300:9400,55000 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p udp --dport 514,1514 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p udp --sport 514,1514 -m state --state ESTABLISHED -j ACCEPT
 
 # # Allow RHEL IDM clients Outbound
 # # Server *shouldn't* be initiating connections... probably. Just change "ESTABLISHED" to "NEW,ESTABLISHED" for INPUT if server initiates
@@ -155,7 +144,7 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 
 # # Allow RHEL IDM server-server comms
 # # Probably not needed if you just have a single server...
-# echo "> Allow RHEL IDM Server to Server"
+# echo "> Allow RHEL IDM Server to Server (udp)"
 # iptables -t mangle -A OUTPUT -p tcp --dport 80,443,389,636,88,464,53,749,7389,9443,9444,9445,8005,8009 -m state --state NEW,ESTABLISHED -j ACCEPT
 # iptables -t mangle -A INPUT -p tcp --sport 80,443,389,636,88,464,53,749,7389,9443,9444,9445,8005,8009 -m state --state NEW,ESTABLISHED -j ACCEPT
 # iptables -t mangle -A OUTPUT -p udp --dport 88,464,53,123 -m state --state NEW,ESTABLISHED -j ACCEPT
@@ -164,23 +153,23 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 # # Allow Hashicorp Vault Bidirectional
 # 443 is client to load balancer, 8200 incoming is between load balancer and servers, rest are server to server (or server to external api but those vary)
 # echo "> Allow Bidirectional Hashicorp Vault"
-# iptables -t mangle -A OUTPUT -p tcp --port 8200,8201 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT -p tcp --port 8200,8201 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --dport 8200,8201 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 8200,8201 -m state --state NEW,ESTABLISHED -j ACCEPT
 
 # # Allow Hashicorp Vault Incoming
 # echo "> Allow Inbound Hashicorp Vault"
-# iptables -t mangle -A OUTPUT -p tcp --sport 8200,443 -m state --state ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT -p tcp --dport 8200,443 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --dport 8200,443 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 8200,443 -m state --state NEW,ESTABLISHED -j ACCEPT
 
 # # Allow Kubernetes Control Plane Incoming
 # echo "> Allow Kubernetes Control Plane Incoming"
-# iptables -t mangle -A OUTPUT -p tcp --sport 6443,2379,2380,10250,10259,10257 -m state --state ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT -p tcp --dport 6443,2379,2380,10250,10259,10257 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --dport 6443,2379,2380,10250,10259,10257 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 6443,2379,2380,10250,10259,10257 -m state --state NEW,ESTABLISHED -j ACCEPT
 
 # # Allow Kubernetes Worker Node Incoming
 # echo "> Allow Kubernetes Control Plane Incoming"
-# iptables -t mangle -A OUTPUT -p tcp --sport 10250,30000:32767 -m state --state ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT -p tcp --dport 10250,30000:32767 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --dport 10250,30000:32767 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 10250,30000:32767 -m state --state NEW,ESTABLISHED -j ACCEPT
 
 # # Allow Gitlab Bidirectional (not sure which direction we need...)
 # 5050 is also needed for remote access to container registry but that's (mostly?) optional, plus any additional services
@@ -195,25 +184,25 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 
 # # Allow Various Port Outgoing
 # echo "> Various Port Outgoing"
-# iptables -t mangle -A OUTPUT -p tcp --dport 3000 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT  -p tccp --sport 3000 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p udp --dport 3000 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT  -p udp --sport 3000 -m state --state ESTABLISHED -j ACCEPT
 
 
 ##################
 ## Ending Rules ##
 ##################
 
-# # Drop All Traffic If Not Matching
+# Drop All Traffic If Not Matching
 echo "> Drop non-matching traffic : Connection may drop"
 iptables -t mangle -A INPUT -j DROP
 iptables -t mangle -A OUTPUT -j DROP
 
-# # Backup Rules (iptables -t mangle-restore < backup)
+# Backup Rules (iptables -t mangle-restore < backup)
 echo "> Backing up rules"
 iptables-save >/etc/ip_rules
 
-# # Anti-Lockout Rule
-# # If user gets locked out by the drop all, then this will run and cancel the changes
+# Anti-Lockout Rule
+# If user gets locked out by the drop all, then this will run and cancel the changes
 echo "> Sleep Initiated : Cancel Program to prevent flush"
 echo "> pssst: this means to cancel the program to save the firewall changes"
 sleep 5
