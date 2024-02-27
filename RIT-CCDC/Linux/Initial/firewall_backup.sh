@@ -1,9 +1,13 @@
 #!/bin/bash
 
 # # dawg what is the snat and dnat states, im not gonna worry about that
-# # use mangle table because why not
+# # use mangle table because it's the first one for packets that are determined to be for this host
+# # https://stuffphilwrites.com/wp-content/uploads/2014/09/FW-IDS-iptables-Flowchart-v2019-04-30-1.png 
 
 # # If this Script is not Working check .bashrc or aliases
+
+# # This script assumes that iptables is installed. To verify, run iptables --list or similar.
+# # This script is aimed to only have iptables running without any wrappers on it, such as ufw or firewalld.
 
 ###########################
 ## Must run as superuser ##
@@ -15,19 +19,24 @@ if [ "$EUID" -ne 0 ]
 fi
 
 # # Import inventory script for service variables, redirect output to null
+# # Feature development paused, just manually edit the services below
 # source inventory.sh > /dev/null 2>&1
 
 # # Disable UFW as we're handing all firewall stuff in iptables and it's confusing if we manage both
 ufw disable
 
-# # May Have to mess around with firewalld
-# systemctl stop firewalld
-# systemctl disable firewalld
+# # Disable firewalld, we're doing everything natively in iptables and sometimes they mix each other up
+systemctl stop firewalld
+systemctl disable firewalld
 
 ################
 ## Main Rules ##
 ################
 
+# # Backup Old Rules (iptables -t mangle-restore < backup) [for forensics and etc]
+echo "> Backing up old rules"
+iptables-save >/etc/ip_rules_old
+ip6tables-save >/etc/ip6_rules_old
 
 # Flush Tables
 # NAT and RAW tables too? sure, why not
@@ -79,7 +88,7 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 # OTHER OPTIONAL RULES #
 ########################
 
-# # Iptables Ranges
+# # Iptables Ranges Examples
 # iptables -t mangle -A INPUT -s 10.5.1.0/24 -j ACCEPT
 # iptables -t mangle -A INPUT -s 10.5.2.0/24 -j ACCEPT
 # iptables -t mangle -A INPUT -s 10.x.x.0/24 -j DROP
@@ -210,7 +219,8 @@ iptables -t mangle -A OUTPUT -j DROP
 
 # # Backup Rules (iptables -t mangle-restore < backup)
 echo "> Backing up rules"
-iptables-save >/etc/ip_rules
+iptables-save >/etc/ip_rules_new
+ip6tables-save >/etc/ip6_rules_new
 
 # # Anti-Lockout Rule
 # # If user gets locked out by the drop all, then this will run and cancel the changes
