@@ -62,20 +62,40 @@ ip6tables -X
 ip6tables -t mangle -P INPUT DROP
 ip6tables -t mangle -P OUTPUT DROP
 
-# Allow ICMP 
+# # Ratelimiting
+# # Add the following to the end of any rule (and have the rule be a DROP rule):
+# -m state --state NEW -m recent --update --seconds 60 --hitcount 6
+# # It updates the "recent" list with the source IP address of packets if they match the specified criteria.
+# # NEW is important, because limited established traffic would be bad
+# # In this case, it will update the "recent" list if the source IP has made 6 connections within the last 60 seconds (1 minute)
+
+# # Block all rate-limited traffic
+# # Note: if you have more permissive rate limiting for another rule further down, this one will override it due to it occuring first
+# echo "> Block all rate-limited incoming traffic"
+# iptables -t mangle -A INPUT -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j LOG --log-prefix "Rate Limit Hit, Dropping Packet: " 
+# iptables -t mangle -A INPUT -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j DROP
+
+# # Allow ICMP 
 echo "> Allow ICMP"
 iptables -t mangle -A INPUT -p ICMP -j ACCEPT
 iptables -t mangle -A OUTPUT -p ICMP -j ACCEPT
 
-# Allow Loopback Traffic
+# # Allow Loopback Traffic
 echo "> Allow Loopback Traffic"
 iptables -t mangle -A INPUT -i lo -j ACCEPT
 iptables -t mangle -A OUTPUT -o lo -j ACCEPT
 
-# Allow Incoming SSH
+# # Block Incoming SSH Brute Force
+# # The setting of 60 seconds and 6 hits is configured for a scored SSH service scoring 4 times a minute plus blue team access.
+# # If SSH is not scored, lower hitcount to something like 3 due to there being fewer legitimate SSH connections.
+echo "> Block Inbound SSH Brute Force"
+iptables -t mangle -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j LOG --log-prefix "SSH Rate Limit Hit, Dropping Packet: " 
+iptables -t mangle -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j DROP
+
+# # Allow Incoming SSH
 echo "> Allow Inbound SSH"
-iptables -t mangle -A INPUT -p tcp --dport ssh -m state --state NEW,ESTABLISHED -j ACCEPT
-iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j ACCEPT
+iptables -t mangle -A INPUT -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -t mangle -A OUTPUT -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
 
 ## Allow Scored Service outbound (CCSClient)
 ## Change `scoring_ip` to the ip of the scoring server and '80,443' to ips of the scored service!
@@ -197,6 +217,65 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 # iptables -t mangle -A OUTPUT -p tcp --dport 80,443 -m state --state NEW,ESTABLISHED -j ACCEPT
 # iptables -t mangle -A INPUT -p tcp --sport 80,443 -m state --state NEW,ESTABLISHED -j ACCEPT
 
+# # Allow Grafana Bidirectional
+# echo "> Allow Grafana Bidirectional"
+# iptables -t mangle -A OUTPUT -p tcp --sport 3000 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --dport 3000 -m state --state NEW,ESTABLISHED -j ACCEPT
+
+# # Allow IMAP/S Incoming (For Server)
+# # 143 is unencrypted, 993 is encrypted
+# echo "> Allow IMAP/S Incoming"
+# iptables -t mangle -A OUTPUT -p tcp --sport 143,993 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --dport 143,993 -m state --state NEW,ESTABLISHED -j ACCEPT
+
+# # Allow IMAP/S Outbound (For Client)
+# # 143 is unencrypted, 993 is encrypted
+# echo "> Allow IMAP/S Outbound"
+# iptables -t mangle -A OUTPUT -p tcp --dport 143,993 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 143,993 -m state --state NEW,ESTABLISHED -j ACCEPT
+
+# # Allow SMTP/S Incoming (For Server)
+# # 25 is unencrypted, 587 is encrypted, 465 is outdated encrypted
+# echo "> Allow SMTP/S Incoming"
+# iptables -t mangle -A INPUT -p tcp --dport 25,587,465 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --sport 25,587,465 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow SMTP/S Outbound (For Client)
+# # 25 is unencrypted, 587 is encrypted, 465 is outdated encrypted
+# echo "> Allow SMTP/S Outbound"
+# iptables -t mangle -A OUTPUT -p tcp --dport 25,587,465 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 25,587,465 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow IRC Inbound (For Server)
+# echo "> Allow IRC Inbound"
+# iptables -t mangle -A INPUT -p tcp --dport 194,529,994,6660:7000 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --sport 194,529,994,6660:7000 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow IRC Outgoing (For Client)
+# echo "> Allow IRC Outgoing"
+# iptables -t mangle -A OUTPUT -p tcp --dport 194,529,994,6660:7000 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --sport 194,529,994,6660:7000 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow FTP Inbound (For Server)
+# echo "> Allow FTP Inbound"
+# iptables -t mangle -A INPUT -p tcp --dport 20,21 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --sport 20,21 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow FTP Outbound (For Client)
+# echo "> Allow FTP Outbound"
+# iptables -t mangle -A OUTPUT -p tcp --sport 20,21 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --dport 20,21 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow FTPS Inbound (For Server)
+# echo "> Allow FTPS Inbound"
+# iptables -t mangle -A INPUT -p tcp --dport 989,990 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp --sport 989,990 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow FTPS Outbound (For Client)
+# echo "> Allow FTPS Outbound"
+# iptables -t mangle -A OUTPUT -p tcp --sport 989,990 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp --dport 989,990 -m state --state ESTABLISHED -j ACCEPT
+
 # # Accept Various Port Incoming
 # echo "> Various Port Incoming"
 # iptables -t mangle -A INPUT -p tcp --dport 8000 -m state --state NEW,ESTABLISHED -j ACCEPT
@@ -205,12 +284,17 @@ iptables -t mangle -A OUTPUT -p tcp --sport ssh -m state --state ESTABLISHED -j 
 # # Allow Various Port Outgoing
 # echo "> Various Port Outgoing"
 # iptables -t mangle -A OUTPUT -p tcp --dport 3000 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A INPUT  -p tccp --sport 3000 -m state --state ESTABLISHED -j ACCEPT
+# iptables -t mangle -A INPUT  -p tcp --sport 3000 -m state --state ESTABLISHED -j ACCEPT
 
 
 ##################
 ## Ending Rules ##
 ##################
+
+# # Log All Traffic If Not Matching
+echo "> Log non-matching traffic"
+iptables -t mangle -A INPUT -j LOG --log-prefix "Packet dropped: "
+iptables -t mangle -A OUTPUT -j LOG --log-prefix "Packet dropped: "
 
 # # Drop All Traffic If Not Matching
 echo "> Drop non-matching traffic : Connection may drop"
