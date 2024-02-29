@@ -453,15 +453,16 @@ fetch_all_scripts() {
     #if ! [ -z "$NAME" ];
     #then
         # If we did make an admin user, then toss the scripts into their home and make them all editable
-    #    git clone https://github.com/CCDC-RIT/Linux-Scripts/ /home/$NAME/Linux-Scripts
+    #    git clone https://github.com/Guac0/Cybersecurity-Stash /home/$NAME/Linux-Scripts
     #    find /home/$NAME/Linux-Scripts -type f -iname "*.sh" -exec chmod +x {} \;
     #    echo "Scripts have been downloaded to /home/$NAME/Linux-Scripts"
     #else
 
     # If we didn't make an admin user, then toss the scripts into the current directory and make them all editable
-    git clone https://github.com/CCDC-RIT/Linux-Scripts/
+    git clone https://github.com/Guac0/Cybersecurity-Stash
+    cd Cybersecurity-Stash/RIT-CCDC/Linux
     find ./ -type f -iname "*.sh" -exec chmod +x {} \;
-    echo "Scripts have been downloaded to ./Linux-Scripts"
+    echo "Scripts have been downloaded to ./Linux"
 
     #fi
 }
