@@ -41,6 +41,7 @@ ip6tables-save >/etc/ip6_rules_old
 # Flush Tables
 # NAT and RAW tables too? sure, why not
 echo "> Flushing Tables"
+echo "> If docker is installed, check its rules too."
 iptables -t mangle -F
 iptables -t mangle -X
 iptables -t raw -F
@@ -59,6 +60,8 @@ ip6tables -F
 ip6tables -X
 
 # IPv6 is cringe, block it
+echo "> Blocking all IPv6 traffic"
+echo "> If you're on IPv6, skill issue. just NAT it more lmao"
 ip6tables -t mangle -P INPUT DROP
 ip6tables -t mangle -P OUTPUT DROP
 
@@ -72,8 +75,14 @@ ip6tables -t mangle -P OUTPUT DROP
 # # Block all rate-limited traffic
 # # Note: if you have more permissive rate limiting for another rule further down, this one will override it due to it occuring first
 # echo "> Block all rate-limited incoming traffic"
+# iptables -t mangle -A INPUT -m state --state NEW -m recent --set
 # iptables -t mangle -A INPUT -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j LOG --log-prefix "Rate Limit Hit, Dropping Packet: " 
 # iptables -t mangle -A INPUT -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j DROP
+
+# # Allow all ESTABLISHED and RELATED. This means we just need to allow NEW connections for each specific rule
+# echo "> Allow all established and related traffic"
+# iptables -t mangle -A INPUT -p all -m state --state ESTABLISHED,RELATED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p all -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 # # Allow ICMP 
 echo "> Allow ICMP"
@@ -89,6 +98,7 @@ iptables -t mangle -A OUTPUT -o lo -j ACCEPT
 # # The setting of 60 seconds and 6 hits is configured for a scored SSH service scoring 4 times a minute plus blue team access.
 # # If SSH is not scored, lower hitcount to something like 3 due to there being fewer legitimate SSH connections.
 echo "> Block Inbound SSH Brute Force"
+iptables -t mangle -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --set
 iptables -t mangle -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j LOG --log-prefix "SSH Rate Limit Hit, Dropping Packet: " 
 iptables -t mangle -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j DROP
 
