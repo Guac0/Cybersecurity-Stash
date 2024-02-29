@@ -107,6 +107,11 @@ echo "> Allow Inbound SSH"
 iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -j ACCEPT
 
+# # Allow Incoming SSH From Specific Network
+# echo "> Allow Inbound SSH From Specific Network Only"
+# iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -s PUTNETWORKHERE/24 -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -d PUTNETWORKHERE/24 -j ACCEPT
+
 ## Allow Scored Service outbound (CCSClient)
 ## Change `scoring_ip` to the ip of the scoring server and '80,443' to ips of the scored service!
 #iptables -t mangle -A OUTPUT -p tcp -d scoring_ip -m multiport --sports 80,443 -m state --state NEW,ESTABLISHED -j ACCEPT
@@ -149,6 +154,11 @@ iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ES
 # echo "> Allow Outbound SSH"
 # iptables -t mangle -A OUTPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 # iptables -t mangle -A INPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -j ACCEPT
+
+# # Allow SSH Outgoing To Specific Network Only
+# echo "> Allow Outbound SSH To Specific Network Only"
+# iptables -t mangle -A OUTPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -d NETWORK/24 -j ACCEPT
+# iptables -t mangle -A INPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -s NETWORK/24 -j ACCEPT
 
 # # Allow MariaDB/MySQL Outgoing
 # echo "> Allow Outbound MariaDB/MySQL"
