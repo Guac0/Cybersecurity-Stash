@@ -637,9 +637,9 @@ common_pack
 fetch_all_scripts
 setup_honeypot
 bash_rep
-install_wazuh
-nginx_setup
-osquery_install
+#install_wazuh
+#nginx_setup
+#osquery_install
 
 echo "Downloads script complete!"
 
