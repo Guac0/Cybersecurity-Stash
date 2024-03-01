@@ -63,7 +63,7 @@ common_pack() {
 
     echo "Installing common packages..."
     # curl may be pre-installed in order to fetch this installer script in the first place...
-    COMMON_PACKAGES="git curl vim tcpdump lynis net-tools tmux nmap fail2ban psad debsums clamav auditd vlock" #snoopy
+    COMMON_PACKAGES="git curl vim tcpdump lynis net-tools tmux nmap fail2ban psad debsums clamav auditd vlock nethogs" #snoopy
     
     # Change package manager depending on OS
     if $DEBIAN || $UBUNTU ; then
@@ -84,6 +84,12 @@ common_pack() {
         echo "Using yum to install common packages."
 
         yum check-update
+
+        # needed for nethogs
+        # On Red Hat based systems, you will first need to enable the epel (extra packages for enterprise linux) repo:
+        wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm 
+        rpm -ivh epel-release-latest-8.noarch.rpm
+
         yum install $COMMON_PACKAGES -y
     elif $ALPINE ; then 
         echo "Detected compatible OS: $OS_NAME"
