@@ -145,3 +145,5 @@ for user in $all_users; do
         echo "Changed password and secured $user"
     fi
 done
+
+passwd -l root
