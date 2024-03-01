@@ -1,3 +1,4 @@
+#!/bin/bash
 # A simple version of downloads.sh that only installs curl, git, and clones the repo
 
 # check for root for installs and exit if not found
