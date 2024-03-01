@@ -296,6 +296,48 @@ iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 194,529,994,6660:7000 
 # iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 989,990 -m state --state NEW,ESTABLISHED -j ACCEPT
 # iptables -t mangle -A INPUT -p tcp -m multiport --dports 989,990 -m state --state ESTABLISHED -j ACCEPT
 
+# # Allow Datadog
+# # "Datadog agent sends all of its logs to the cloud server using https"
+# # inbound on loopback
+# # outbound to any of the hosts on https://ip-ranges.us5.datadoghq.com/
+echo "> Allow Datadog"
+iptables -t mangle -A OUTPUT -d 34.149.66.128/26 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.149.66.128/26 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.160.125.158/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.160.125.158/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 35.190.51.116/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 35.190.51.116/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.149.119.85/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.149.119.85/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.149.203.90/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.149.203.90/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.110.187.75/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.110.187.75/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.117.129.254/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.117.129.254/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.149.66.131/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.149.66.131/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.149.54.227/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.149.54.227/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.149.66.128/26 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.149.66.128/26 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.160.7.29/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.160.7.29/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.160.40.115/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.160.40.115/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.160.41.148/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.160.41.148/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.160.125.158/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.160.125.158/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.160.150.109/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.160.150.109/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 35.190.51.116/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 35.190.51.116/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 35.244.255.175/32 -j ACCEPT
+iptables -t mangle -A INPUT -s 35.244.255.175/32 -j ACCEPT
+iptables -t mangle -A OUTPUT -d 34.149.66.128/26 -j ACCEPT
+iptables -t mangle -A INPUT -s 34.149.66.128/26 -j ACCEPT
+
 # # Accept Various Port Incoming
 # echo "> Various Port Incoming"
 # iptables -t mangle -A INPUT -p tcp -m multiport --dports 8000 -m state --state NEW,ESTABLISHED -j ACCEPT
