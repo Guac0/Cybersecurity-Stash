@@ -63,7 +63,7 @@ common_pack() {
 
     echo "Installing common packages..."
     # curl may be pre-installed in order to fetch this installer script in the first place...
-    COMMON_PACKAGES="git curl vim tcpdump lynis net-tools tmux nmap fail2ban psad debsums clamav auditd vlock nethogs" #snoopy
+    COMMON_PACKAGES="git curl vim tcpdump lynis net-tools tmux nmap fail2ban psad debsums auditd vlock nethogs" #snoopy
     
     # Change package manager depending on OS
     if $DEBIAN || $UBUNTU ; then
@@ -431,8 +431,8 @@ bash_rep() {
     echo "Replacing bashrc for new users and root..."
     mv /etc/skel/.bashrc /etc/skel/.bashrc.backup
     mv /root/.bashrc /root/.bashrc.backup
-    cp -fr "Linux-Scripts/Initial/Hardening Script/configs/bashrc" /etc/skel/.bashrc
-    cp -fr "Linux-Scripts/Initial/Hardening Script/configs/bashrc" /root/.bashrc
+    cp -fr "Initial/Hardening Script/configs/bashrc" /etc/skel/.bashrc
+    cp -fr "Initial/Hardening Script/configs/bashrc" /root/.bashrc
     echo "Replaced .bashrc"
 }
 
