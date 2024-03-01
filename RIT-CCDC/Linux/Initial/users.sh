@@ -99,6 +99,7 @@ change_passwords(){
 # disable all users in users.txt and change shell
 disable_all() {
     while IFS= read -r user; do
+        chage --maxdays 15 --mindays 6 --warndays 7 --inactive 5 $user;
         crontab -u $user -r
         usermod --expiredate 1 $user # Set the expiration date to yesterday 
 		passwd -l $user; # disable password login
