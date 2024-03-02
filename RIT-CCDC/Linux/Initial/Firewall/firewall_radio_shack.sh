@@ -372,6 +372,6 @@ ip6tables-save >/etc/ip6_rules_new
 # # If user gets locked out by the drop all, then this will run and cancel the changes
 echo "> Sleep Initiated : Cancel Program to prevent flush"
 echo "> pssst: this means to cancel the program to save the firewall changes"
-sleep 5
+sleep 15
 iptables -t mangle -F
 echo "> Anti-Lockout executed : Rules have been flushed"
