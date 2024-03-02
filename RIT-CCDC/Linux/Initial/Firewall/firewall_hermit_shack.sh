@@ -97,15 +97,15 @@ iptables -t mangle -A OUTPUT -o lo -j ACCEPT
 # # Block Incoming SSH Brute Force
 # # The setting of 60 seconds and 6 hits is configured for a scored SSH service scoring 4 times a minute plus blue team access.
 # # If SSH is not scored, lower hitcount to something like 3 due to there being fewer legitimate SSH connections.
-# echo "> Block Inbound SSH Brute Force"
-# iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW -m recent --set
-# iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j LOG --log-prefix "SSH Rate Limit Hit, Dropping Packet: " 
-# iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j DROP
+echo "> Block Inbound SSH Brute Force"
+iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW -m recent --set
+iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j LOG --log-prefix "SSH Rate Limit Hit, Dropping Packet: " 
+iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j DROP
 
 # # Allow Incoming SSH
-# echo "> Allow Inbound SSH"
-# iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -j ACCEPT
+echo "> Allow Inbound SSH"
+iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -j ACCEPT
 
 # # Allow Incoming SSH From Specific Network
 # echo "> Allow Inbound SSH From Specific Network Only"
