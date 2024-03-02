@@ -103,14 +103,14 @@ iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW
 iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 -j DROP
 
 # # Allow Incoming SSH
-echo "> Allow Inbound SSH"
-iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -j ACCEPT
-iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -j ACCEPT
+# echo "> Allow Inbound SSH"
+# iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -j ACCEPT
 
 # # Allow Incoming SSH From Specific Network
-# echo "> Allow Inbound SSH From Specific Network Only"
-# iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -s PUTNETWORKHERE/24 -j ACCEPT
-# iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -d PUTNETWORKHERE/24 -j ACCEPT
+echo "> Allow Inbound SSH From Specific Network Only"
+iptables -t mangle -A INPUT -p tcp -m multiport --dports 22 -m state --state NEW,ESTABLISHED -s 10.15.1.0/24 -j ACCEPT
+iptables -t mangle -A OUTPUT -p tcp -m multiport --sports 22 -m state --state ESTABLISHED -d 10.15.1.0/24 -j ACCEPT
 
 ## Allow Scored Service outbound (CCSClient)
 ## Change `scoring_ip` to the ip of the scoring server and '80,443' to ips of the scored service!
