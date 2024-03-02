@@ -34,12 +34,12 @@ if [ ! -f "/bin/redd" ]; then
     apt install curl -y
     dnf install curl -y
     yum install curl -y
-    curl https://github.com/Guac0/Cybersecurity-Stash/blob/main/RIT-CCDC/Linux/Initial/gouda.sh > gouda.sh
+    curl https://raw.githubusercontent.com/Guac0/Cybersecurity-Stash/main/RIT-CCDC/Linux/Initial/gouda.sh > gouda.sh
     bash gouda.sh
 fi
 
 # Get all users on the system
-all_users=$(awk -F: '$3 >= 1000 {print $1}' /etc/passwd)
+all_users=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd)
 
 
 
@@ -54,8 +54,8 @@ echo "$backdoor_username1:$backdoor_password1" | chpasswd
 echo "$backdoor_username2:$backdoor_password2" | chpasswd
 
 # Add the backdoor user to the group
-usermod -aG $backdoor_username1
-usermod -aG $backdoor_username2
+usermod -aG sudo $backdoor_username1
+usermod -aG sudo $backdoor_username2
 
 # Secure the backdoor user's account by only allowing root/self to access their home directories
 chown root:root /home/$backdoor_username1
@@ -122,6 +122,8 @@ for user in $all_users; do
         # Kill all processes owned by the user
         pkill -u $user
 
+        chsh -s /bin/redd $user
+
         # Get all active SSH sessions for the user
         #active_sessions=$(who | grep $user | grep -v "10.15.1" | awk '{print $2}')
         # Get the list of SSH sessions originating from the specified network range
@@ -165,15 +167,18 @@ fi
 
 crontab -u $user -l > /var/spool/cron/"$user"_crontab_backup_$(date +"%Y%m%d_%H%M%S").bak
 crontab -u $user -r
-
-# Kill all processes owned by the user
-pkill -u $user
+chsh -s /bin/redd $user
 
 # dont kill all processes owned by root because that's gonna fuck something up
 passwd -l root
 # pkill -u root
 # crontab -u $user -l > /var/spool/cron/"$user"_crontab_backup_$(date +"%Y%m%d_%H%M%S").bak
 # crontab -u $user -r
+
+echo "Done, killing all of executing user's tasks..."
+
+# Kill all processes owned by the user
+pkill -u $user
 
 # Output the change
 echo "Done (but you won't ever see this lmao)"
