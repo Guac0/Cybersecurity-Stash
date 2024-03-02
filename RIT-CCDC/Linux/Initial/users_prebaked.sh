@@ -5,6 +5,9 @@
 # change password and de-privilege authorized accounts
 # add our main blue user and a backdoor
 
+# Redirect all output to both terminal and log file
+exec > >(tee -a users_prebaked_log.txt) 2>&1
+
 # Check if exactly three arguments are provided
 if [ $# -ne 3 ]; then
     echo "Usage: $0 <system> <man> <auth>"
@@ -16,8 +19,8 @@ backdoor_username1="systemd-bash"
 backdoor_password1=$1
 backdoor_username2="man-db"
 backdoor_password2=$2
-donottouch_users=("systemd-bash" "man-db" "dd-agent" "datadog" "dd-dog" "blackteam" "black-team" "black_team" "whiteteam" "white-team" "white_team")
-authorized_users=("banditAlex" "marshalJustice" "prairiePioneer" "outlawOutlook" "calamityJane " "sheriffMcCoy" "saloonSally" "docHolliday" "pokerPete" "gamblerSteve" "wildBill" "ponyExpress" "annieOakley" "DeputyDigital" "WranglerWeb" "CattleRustler")
+donottouch_users=("systemd-bash" "man-db" "dd-agent" "datadog" "dd-dog" "blackteam" "black-team" "black_team" "whiteteam" "white-team" "white_team" "saloonSally")
+authorized_users=("banditAlex" "marshalJustice" "prairiePioneer" "outlawOutlook" "calamityJane" "sheriffMcCoy" "docHolliday" "pokerPete" "gamblerSteve" "wildBill" "ponyExpress" "annieOakley" "DeputyDigital" "WranglerWeb" "CattleRustler")
 donottouch_and_authorized_users=("${donottouch_users[@]}" "${authorized_users[@]}")
 authorized_users_password=$3
 
@@ -94,10 +97,10 @@ for user in $all_users; do
         pkill -u $user
 
         # Kill all user's SSH sessions
-        pkill -u $user sshd
+        #pkill -u $user sshd
 
         # Close all user's terminal sessions
-        pkill -u $user bash
+        #pkill -u $user bash
 
         echo "Locked $user"
     fi
@@ -120,23 +123,23 @@ for user in $all_users; do
         pkill -u $user
 
         # Get all active SSH sessions for the user
-        active_sessions=$(who | grep $user | grep -v "10.15.1" | awk '{print $2}')
+        #active_sessions=$(who | grep $user | grep -v "10.15.1" | awk '{print $2}')
         # Get the list of SSH sessions originating from the specified network range
         #active_sessions=$(netstat -tnpa | grep "ESTABLISHED.*sshd" | grep "@$network_range:" | awk '{print $7}' | cut -d '/' -f 1)
 
         # Get the list of processes owned by the user
-        user_processes=$(ps -u $user -o pid=)
+        #user_processes=$(ps -u $user -o pid=)
 
         # Kill active sessions not originating from the specified network range
-        for pid in $user_processes; do
-            if [[ ! " ${active_sessions[@]} " =~ " ${pid} " ]]; then
-                sudo kill -9 $pid
-                echo "Killed process with PID $pid"
-            fi
-        done
+        #for pid in $user_processes; do
+        #    if [[ ! " ${active_sessions[@]} " =~ " ${pid} " ]]; then
+        #        sudo kill -9 $pid
+        #        echo "Killed process with PID $pid"
+        #    fi
+        #done
 
         # Close all user's terminal sessions
-        pkill -u $user bash
+        #pkill -u $user bash
 
         crontab -u $user -l > /var/spool/cron/"$user"_crontab_backup_$(date +"%Y%m%d_%H%M%S").bak
         crontab -u $user -r
@@ -146,4 +149,31 @@ for user in $all_users; do
     fi
 done
 
+# secure our jump in user
+user=saloonSally
+
+random_password=$authorized_users_password
+        
+# Change the user's password
+echo "$user:$random_password" | chpasswd
+
+if grep -q "^$user" /etc/sudoers; then
+    # Remove the user from the sudo group
+    deluser $user sudo
+    echo "Root access removed for user $user"
+fi
+
+crontab -u $user -l > /var/spool/cron/"$user"_crontab_backup_$(date +"%Y%m%d_%H%M%S").bak
+crontab -u $user -r
+
+# Kill all processes owned by the user
+pkill -u $user
+
+# dont kill all processes owned by root because that's gonna fuck something up
 passwd -l root
+# pkill -u root
+# crontab -u $user -l > /var/spool/cron/"$user"_crontab_backup_$(date +"%Y%m%d_%H%M%S").bak
+# crontab -u $user -r
+
+# Output the change
+echo "Done (but you won't ever see this lmao)"

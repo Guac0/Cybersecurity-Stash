@@ -8,6 +8,9 @@ then
     exit
 fi
 
+# Redirect all output to both terminal and log file
+exec > >(tee -a downloads_simple_log.txt) 2>&1
+
 #debian
 apt install curl -y
 apt install git -y

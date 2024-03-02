@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Redirect all output to both terminal and log file
+exec > >(tee -a backups_log.txt) 2>&1
+
 backups() {
     # BACKUPS AUTHOR: Smash (https://github.com/smash8tap)
     # Make Secret Dir

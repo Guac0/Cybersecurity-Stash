@@ -11,6 +11,9 @@ fi
 # Clean Up the Output of some 
 # Look into Autoruns, Potetal Rootkits, Auth backdoors
 
+# Redirect all output to both terminal and log file
+exec > >(tee -a audit_log.txt) 2>&1
+
 sl="sleep"
 s="sudo"
 t="0s"

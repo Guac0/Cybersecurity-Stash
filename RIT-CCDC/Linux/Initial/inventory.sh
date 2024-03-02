@@ -5,7 +5,11 @@
 #todo: expand the distributions detected
 #Notes Need to be Sudo
 
+#ignore errors
 exec 2>/dev/null
+
+# Redirect all output to both terminal and log file
+exec > >(tee -a inventory_log.txt) 2>&1
 
 # Import the OS variables
 # Needs os_detection.sh to run first

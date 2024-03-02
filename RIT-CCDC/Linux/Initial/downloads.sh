@@ -29,6 +29,9 @@ then
     exit
 fi
 
+# Redirect all output to both terminal and log file
+exec > >(tee -a downloads_log.txt) 2>&1
+
 setup_os_detection() {
     # Import and run the os detector script in the current directory
     # Run this first before stuff that needs to know the OS, like common_pack()
